@@ -1,6 +1,9 @@
 import csv
+import random
 from datetime import datetime
+from threading import Timer
 
+import requests
 from vk_api import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
@@ -10,6 +13,17 @@ longpoll = VkBotLongPoll(vk_session, '197126596')
 vk = vk_session.get_api()
 category = ["id", "firstname", "lastname", "regisration data", "nickname", "section"]  # для работы с DictWriter
 users = {}  # словарь с ключами - id пользователя, со значениями объектов User, поля которого выгружаются из users.csv
+
+tracks = {'lil krystalll - cardib': 'melodies/cardib.mp3',
+          'ЛСП - Цветная бумага': 'melodies/cvetnayabumaga.mp3',
+          'PLOHOYPAREN - Фак фейк скам': 'melodies/fuckfakescam.mp3',
+          'White Punk - Крестный': 'melodies/krestniy.mp3',
+          'Boulevard Depo, JEEMBO - Металлолом': 'melodies/metallolom.mp3',
+          'PHARAOH - На луне': 'melodies/nalune.mp3',
+          'OG Buda - Печеньки': 'melodies/pechenki.mp3',
+          'PHARAOH, Big Baby Tape - Шипучка': 'melodies/shipuchka.mp3',
+          'Платина - Случайна': 'melodies/sluchayna.mp3',
+          'Джизус - ТЫ СТАЛА ПРОСТО СУПЕР': 'melodies/tystalaprostosuper.mp3'}
 
 
 class User:
@@ -98,8 +112,26 @@ def change_nickname(event, message):
         send_message(event, f"Вы сменили ник на \"{message[8:]}\"!")
 
 
+def guess_the_melody(event):
+    random_track_name = random.choice(list(tracks.keys()))
+    a = vk.docs.getMessagesUploadServer(
+        type="audio_message",
+        peer_id=2000000000 + event.chat_id
+    )
+    b = requests.post(a['upload_url'], files={'file': open(tracks[random_track_name], 'rb')}).json()
+    c = vk.docs.save(
+        file=b["file"]
+    )
+    d = 'doc{}_{}'.format(c['audio_message']['owner_id'], c['audio_message']['id'])
+    send_message(event, 'Угадай мелодию (только название) за 15 секунд:', d)
+    return random_track_name
+
+
 def main():
     download_users_from_file()
+    gameMELODY = False
+    track_name = ''
+    t = Timer(0.0, lambda x: None)
     for event in longpoll.listen():
         if event.from_chat:
             user_dict = {"id": event.obj.from_id, "firstname": vk.users.get(user_id=event.obj.from_id)[0]['first_name'],
@@ -107,9 +139,30 @@ def main():
             register(user_dict)
             message = str(event.obj.text)
             user_id = str(event.obj.from_id)
-
+            if message.lower() == 'кто я':
+                print(f"Пользователь {users[user_id].nickname} узнаёт свои данные")
+                send_message(event, users[user_id].get_stats())
             if message[:8].lower() == 'никнейм ':
                 change_nickname(event, message)
+
+            if (
+                    message.lower() == 'угадай мелодию' or message.lower() == 'угадать мелодию' or message.lower() == 'угадай трек' or message.lower() == 'угадать трек') and not gameMELODY:
+                print(f'Пользователь {users[user_id].nickname} угадывает мелодию')
+                gameMELODY = True
+                track_name = guess_the_melody(event)
+
+                def end_melody():
+                    send_message(event, f'Время вышло! Название трека: {track_name}')
+                    nonlocal gameMELODY
+                    gameMELODY = False
+
+                t = Timer(15.0, end_melody)
+                t.start()
+            if gameMELODY and message.lower() == track_name.split('-')[1].strip().lower():
+                t.cancel()
+                send_message(event, f'[id{user_id}|{users[user_id].nickname}] ответил верно!'
+                                    f'\nНазвание трека: {track_name}')
+                gameMELODY = False
 
             print(f'{user_id}: {message}')
             upload_user_to_file()
