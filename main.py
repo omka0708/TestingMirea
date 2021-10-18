@@ -27,6 +27,12 @@ tracks = {'lil krystalll - cardib': 'melodies/cardib.mp3',
 
 
 class User:
+    """
+    User class.
+    Stores the identifier, first name, last name, date of registration in the bot,
+    nickname and section parameter (possibly, it will be changed in the future),
+    nickname setter and user information getter
+    """
     def __init__(self, id_, firstname_, lastname_, registration_data_, nickname_, section_):
         self.id = id_
         self.firstname = firstname_
@@ -45,7 +51,11 @@ class User:
                f"Дата регистрации: {self.registration_data}"
 
 
-def register(_users):  # регистрация пользователя (если он не зарегистрирован)
+def register(_users):
+    """
+    Registration method.
+    Registers the user in the users.csv file if he is not registered.
+    """
     with open("users.csv", "a", encoding='utf8') as w_file:
         writer = csv.DictWriter(w_file, lineterminator="\r", fieldnames=category)
         is_registered = False
@@ -67,7 +77,11 @@ def register(_users):  # регистрация пользователя (есл
             writer.writerow(_users)
 
 
-def download_users_from_file():  # выгрузка данных о пользователе из users.csv в виде объектов класса User
+def download_users_from_file():
+    """
+    A method for unloading user data from a file.
+    Unloads user data from users.csv as objects of the User class
+    """
     with open("users.csv", "r", encoding='utf8') as file:
         for row in file:
             _id, _firstname, _lastname, _registration_data, _nickname, _section = row.strip().split(",")
@@ -78,7 +92,11 @@ def download_users_from_file():  # выгрузка данных о пользо
         print("Все зарегистрированные пользователи загружены!")
 
 
-def upload_user_to_file():  # загрузка данных о пользователе в файл (обновление users.csv)
+def upload_user_to_file():
+    """
+    Method of loading user data file (update users.csv).
+    Writes the current changes to the users.csv file.
+    """
     with open("users.csv", "w", encoding='utf8') as file:
         writer = csv.DictWriter(file, lineterminator="\r", fieldnames=category)
         for value in users.values():
@@ -91,6 +109,11 @@ def upload_user_to_file():  # загрузка данных о пользова�
 
 
 def send_message(event, message, attachment=None):
+    """
+    Method for sending messages.
+    Accepts an event, message and attachment (optional) as input.
+    Sends a message.
+    """
     vk.messages.send(
         key='abe17c7a950a294d1298e7703846b9220a139e37',
         server='https://lp.vk.com/wh197126596',
@@ -103,6 +126,11 @@ def send_message(event, message, attachment=None):
 
 
 def change_nickname(event, message):
+    """
+    Nickname change method.
+    Accepts an event and a message as input,
+    changes the user's nickname.
+    """
     if len(message[8:].lower()) > 20:
         send_message(event, "Слишком длинный ник, допустимая длина - 20 символов")
     else:
@@ -113,6 +141,12 @@ def change_nickname(event, message):
 
 
 def guess_the_melody(event):
+    """
+    Method of guessing melodies.
+    Receives an event as input,
+    uploads a random melody to the VK server,
+    returns the name of this melody.
+    """
     random_track_name = random.choice(list(tracks.keys()))
     a = vk.docs.getMessagesUploadServer(
         type="audio_message",
@@ -128,6 +162,10 @@ def guess_the_melody(event):
 
 
 def main():
+    """
+    The main method.
+    Reading events in the chat, calls to the registration methods, download, upload, etc.
+    """
     download_users_from_file()
     gameMELODY = False
     track_name = ''
@@ -164,7 +202,6 @@ def main():
                                     f'\nНазвание трека: {track_name}')
                 gameMELODY = False
 
-            print(f'{user_id}: {message}')
             upload_user_to_file()
 
 
