@@ -88,6 +88,16 @@ def send_message(event, message, attachment=None):
     )
 
 
+def change_nickname(event, message):
+    if len(message[8:].lower()) > 20:
+        send_message(event, "Слишком длинный ник, допустимая длина - 20 символов")
+    else:
+        print(f"Пользователь {users[str(event.obj.from_id)].nickname} (id {str(event.obj.from_id)}) сменил "
+              f"ник на {message[8:]}")
+        users[str(event.obj.from_id)].set_nickname(message[8:])
+        send_message(event, f"Вы сменили ник на \"{message[8:]}\"!")
+
+
 def main():
     download_users_from_file()
     for event in longpoll.listen():
@@ -97,6 +107,9 @@ def main():
             register(user_dict)
             message = str(event.obj.text)
             user_id = str(event.obj.from_id)
+
+            if message[:8].lower() == 'никнейм ':
+                change_nickname(event, message)
 
             print(f'{user_id}: {message}')
             upload_user_to_file()
