@@ -1,3 +1,3 @@
-# TestingMirea
+# vkBot-choose-melody
 
-TestingMirea is a repository created for the "Software Testing and Verification" subject.
+Bot-guessing musical compositions from voice messages.
