@@ -11,8 +11,8 @@ import requests
 from vk_api.utils import get_random_id
 from gtts import gTTS
 
-vk_session = vk_api.VkApi(token="13c403991e7cf080abc0a32a6450e4552feb9457bb646c174eda48342bddb1adb486ae4a78fa465a48c33")
-longpoll = VkBotLongPoll(vk_session, '197126596')
+vk_session = vk_api.VkApi(token=os.getenv('VK_GROUP_TOKEN'))
+longpoll = VkBotLongPoll(vk_session, os.getenv('VK_GROUP_ID'))
 vk = vk_session.get_api()
 category = ["id", "firstname", "lastname", "regisration data", "nickname", "section"]  # для работы с DictWriter
 users = {}  # словарь с ключами - id пользователя, со значениями объектов User, поля которого выгружаются из users.csv
